@@ -13,4 +13,5 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Comment> Comments { get; set; }
     public DbSet<BlogLike> BlogLikes { get; set; }
     public DbSet<Notification> Notifications { get; set; }
+    public DbSet<Image> Images { get; set; }
 }

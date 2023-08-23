@@ -5,7 +5,12 @@ namespace API.Interfaces
 {
     public interface IBlogService
     {
-        Task<IEnumerable<BlogReadDto>> GetAllBlogsAsync();
+        // Not paginated
+        // Task<IEnumerable<BlogReadDto>> GetAllBlogsAsync();
+
+        // Paginated
+        Task<PaginatedResponse<BlogReadDto>> GetBlogPostsAsync(int pageNumber, int pageSize, string searchTerm, string tag);
+
         Task<BlogReadDto> GetBlogByIdAsync(Guid id);
         Task<BlogReadDto> CreateBlogAsync(BlogCreateDto blogDto);
         Task<bool> UpdateBlogAsync(Guid id, BlogUpdateDto blogDto);

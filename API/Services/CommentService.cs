@@ -18,31 +18,88 @@ namespace API.Services
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<CommentReadDto>> GetAllCommentsForBlogAsync(Guid blogId)
+        public async Task<PaginatedResponse<CommentReadDto>> GetPaginatedCommentsForBlogAsync(Guid blogId, CommentPaginationDto pagination)
         {
-            var comments = await _dbContext.Comments.Where(c => c.BlogPostId == blogId).ToListAsync();
-            return _mapper.Map<IEnumerable<CommentReadDto>>(comments);
+            try
+            {
+                var totalItems = await _dbContext.Comments.Where(c => c.BlogPostId == blogId).CountAsync();
+                var totalPages = (int)Math.Ceiling(totalItems / (double)pagination.PageSize);
+
+                var comments = await _dbContext.Comments
+                                              .Where(c => c.BlogPostId == blogId)
+                                              .Skip((pagination.PageNumber - 1) * pagination.PageSize)
+                                              .Take(pagination.PageSize)
+                                              .ToListAsync();
+
+                var commentDtos = _mapper.Map<IEnumerable<CommentReadDto>>(comments);
+
+                return new PaginatedResponse<CommentReadDto>
+                {
+                    Data = commentDtos,
+                    TotalCount = totalItems,
+                    TotalPages = totalPages,
+                    CurrentPage = pagination.PageNumber,
+                    ItemsPerPage = pagination.PageSize
+                };
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        public async Task<CommentReadDto> GetCommentByIdAsync(Guid commentId)
+        {
+            try
+            {
+                var comment = await _dbContext.Comments.FindAsync(commentId);
+
+                if (comment == null)
+                {
+                    return null;
+                }
+
+                return _mapper.Map<CommentReadDto>(comment);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         public async Task<CommentReadDto> AddCommentToBlogAsync(Guid blogId, CommentCreateDto commentDto)
         {
-            var comment = _mapper.Map<Comment>(commentDto);
+            try
+            {
+                var comment = _mapper.Map<Comment>(commentDto);
 
-            _dbContext.Comments.Add(comment);
-            await _dbContext.SaveChangesAsync();
+                _dbContext.Comments.Add(comment);
+                await _dbContext.SaveChangesAsync();
 
-            return _mapper.Map<CommentReadDto>(comment);
+                return _mapper.Map<CommentReadDto>(comment);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         public async Task<bool> DeleteCommentAsync(Guid commentId)
         {
-            var comment = await _dbContext.Comments.FindAsync(commentId);
-            if (comment == null)
-                throw new KeyNotFoundException("Comment not found");
+            try
+            {
+                var comment = await _dbContext.Comments.FindAsync(commentId);
+                if (comment == null)
+                    throw new KeyNotFoundException("Comment not found");
 
-            _dbContext.Comments.Remove(comment);
-            await _dbContext.SaveChangesAsync();
-            return true;
+                _dbContext.Comments.Remove(comment);
+                await _dbContext.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
     }
 }

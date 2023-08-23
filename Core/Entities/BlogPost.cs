@@ -28,13 +28,14 @@ namespace Core.Entities
 
         public DateTime PublicationDate { get; set; } = DateTime.UtcNow;
 
-        public string Tags { get; set; }
+        public string? Tags { get; set; }
 
         // If images are file paths or URLs.
-        public string ImagePath { get; set; }
+        public string? ImagePath { get; set; }
 
         // Navigation property for related comments.
         public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
         public ICollection<BlogLike> Likes { get; set; }
+        public virtual ICollection<Image> Images { get; set; }
     }
 }

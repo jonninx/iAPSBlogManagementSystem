@@ -2,12 +2,17 @@
 using API.Models.ResponseModels;
 using AutoMapper;
 using Core.Entities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace API.Mappings
+namespace UnitTesting
 {
-    public class MappingProfile : Profile
+    public class MapperProfile : Profile
     {
-        public MappingProfile()
+        public MapperProfile()
         {
             CreateMap<BlogPost, BlogReadDto>();
 
@@ -20,11 +25,8 @@ namespace API.Mappings
             .ForMember(dest => dest.Comments, opt => opt.Ignore()) 
             .ForMember(dest => dest.Likes, opt => opt.Ignore())  
             .ForMember(dest => dest.Images, opt => opt.Ignore());
-   
+            
             CreateMap<BlogUpdateDto, BlogPost>();
-            CreateMap<Comment, CommentReadDto>();
-            CreateMap<CommentCreateDto, Comment>();
-            CreateMap<Image, ImageReadDto>();
         }
     }
 }

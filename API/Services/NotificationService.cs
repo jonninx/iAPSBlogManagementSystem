@@ -16,13 +16,22 @@ namespace API.Services
 
         public async Task<bool> CreateNotificationAsync(Notification notification)
         {
-            _context.Notifications.Add(notification);
-            return await _context.SaveChangesAsync() > 0;
+            try
+            {
+                _context.Notifications.Add(notification);
+                return await _context.SaveChangesAsync() > 0;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         public async Task<IEnumerable<NotificationDto>> GetUserNotificationsAsync(string userId)
         {
-            return await _context.Notifications
+            try
+            {
+                return await _context.Notifications
                                  .Where(n => n.UserId == userId)
                                  .OrderByDescending(n => n.CreatedAt)
                                  .Select(n => new NotificationDto
@@ -33,15 +42,27 @@ namespace API.Services
                                      IsRead = n.IsRead
                                  })
                     .ToListAsync();
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         public async Task<bool> MarkNotificationAsReadAsync(Guid notificationId)
         {
-            var notification = await _context.Notifications.FindAsync(notificationId);
-            if (notification == null) return false;
+            try
+            {
+                var notification = await _context.Notifications.FindAsync(notificationId);
+                if (notification == null) return false;
 
-            notification.IsRead = true;
-            return await _context.SaveChangesAsync() > 0;
+                notification.IsRead = true;
+                return await _context.SaveChangesAsync() > 0;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
     }
 }

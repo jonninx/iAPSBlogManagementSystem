@@ -9,6 +9,6 @@ namespace Core.Entities
 {
     public class ApplicationUser : IdentityUser
     {
-
+        public virtual ICollection<BlogPost> BlogPosts { get; set; }
     }
 }

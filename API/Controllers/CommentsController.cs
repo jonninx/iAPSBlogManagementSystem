@@ -1,5 +1,6 @@
 ﻿using API.Interfaces;
 using API.Models.RequestModels;
+using API.Models.ResponseModels;
 using Core.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -24,10 +25,25 @@ namespace API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetCommentsForBlog(Guid blogId)
+        public async Task<IActionResult> GetPaginatedCommentsForBlog(Guid blogId, [FromQuery] CommentPaginationDto pagination)
         {
-            var comments = await _commentService.GetAllCommentsForBlogAsync(blogId);
-            return Ok(comments);
+            var paginatedComments = await _commentService.GetPaginatedCommentsForBlogAsync(blogId, pagination);
+            if (paginatedComments.Data == null || !paginatedComments.Data.Any())
+            {
+                return NotFound();
+            }
+            return Ok(paginatedComments);
+        }
+
+        [HttpGet("{commentId}")]
+        public async Task<IActionResult> GetComment(Guid id)
+        {
+            var comment = await _commentService.GetCommentByIdAsync(id);
+            if (comment == null)
+            {
+                return NotFound();
+            }
+            return Ok(comment);
         }
 
         [HttpPost]
@@ -57,7 +73,7 @@ namespace API.Controllers
                 await _notificationService.CreateNotificationAsync(notification);
             }
 
-            return CreatedAtAction(nameof(GetCommentsForBlog), new { id = result.Id }, commentDto);
+            return CreatedAtAction(nameof(GetComment), new { id = result.Id }, commentDto);
         }
 
         [HttpDelete("{commentId}")]

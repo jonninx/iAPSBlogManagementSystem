@@ -1,5 +1,6 @@
 ﻿using API.Interfaces;
 using API.Models.RequestModels;
+using API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -14,17 +15,19 @@ namespace API.Controllers
     public class BlogsController : ControllerBase
     {
         private readonly IBlogService _blogService;
+        private readonly IImageService _imageService;
 
-        public BlogsController(IBlogService blogService)
+        public BlogsController(IBlogService blogService, IImageService imageService)
         {
             _blogService = blogService;
+            _imageService = imageService;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetBlogs()
+        public async Task<IActionResult> GetBlogs(int pageNumber = 1, int pageSize = 10, string searchTerm = null, string tag = null)
         {
-            var blogs = await _blogService.GetAllBlogsAsync();
-            return Ok(blogs);
+            var paginatedBlogs = await _blogService.GetBlogPostsAsync(pageNumber, pageSize, searchTerm, tag);
+            return Ok(paginatedBlogs);
         }
 
         [HttpGet("{id}")]
@@ -152,6 +155,70 @@ namespace API.Controllers
             {
                 return BadRequest("Failed to unlike the blog post or blog post was not previously liked by this user.");
             }
+        }
+
+        [HttpPost("{blogId}/image")]
+        [Authorize(Roles = "Administrator, Creator")]
+        public async Task<IActionResult> UploadImage(Guid blogId, [FromForm] ImageCreateDto imageDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            // You can verify if the blog with the given ID exists 
+            // (this step can be done in the service too).
+
+            var image = await _imageService.AddImageToBlogAsync(blogId, imageDto);
+            if (image == null)
+            {
+                return BadRequest("Error uploading the image.");
+            }
+
+            return CreatedAtAction(nameof(GetImageById), new { id = image.ImageId }, image);
+        }
+
+        [HttpGet("{id}/image")]
+        public async Task<IActionResult> GetImageById(Guid id)
+        {
+            var image = await _imageService.GetImagesForBlogAsync(id);
+            if (image == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(image);
+        }
+
+        [HttpPut("{id}/image")]
+        [Authorize(Roles = "Administrator, Creator")]
+        public async Task<IActionResult> UpdateImage(Guid id, [FromBody] ImageUpdateDto imageDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var result = await _imageService.UpdateImageAsync(id, imageDto);
+            if (!result)
+            {
+                return NotFound();
+            }
+
+            return NoContent();
+        }
+
+        [HttpDelete("{id}/image")]
+        [Authorize(Roles = "Administrator")]
+        public async Task<IActionResult> DeleteImage(Guid id)
+        {
+            var result = await _imageService.DeleteImageAsync(id);
+            if (!result)
+            {
+                return NotFound();
+            }
+
+            return NoContent();
         }
     }
 }

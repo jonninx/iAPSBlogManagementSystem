@@ -5,7 +5,8 @@ namespace API.Interfaces
 {
     public interface ICommentService
     {
-        Task<IEnumerable<CommentReadDto>> GetAllCommentsForBlogAsync(Guid blogId);
+        Task<PaginatedResponse<CommentReadDto>> GetPaginatedCommentsForBlogAsync(Guid blogId, CommentPaginationDto pagination);
+        Task<CommentReadDto> GetCommentByIdAsync(Guid commentId);
         Task<CommentReadDto> AddCommentToBlogAsync(Guid blogId, CommentCreateDto commentDto);
         Task<bool> DeleteCommentAsync(Guid commentId);
     }
